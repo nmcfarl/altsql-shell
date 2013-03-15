@@ -122,8 +122,8 @@ sub render {
 
 	# Buffer will be unset unless there is a static result
 	my $buffer = $self->buffer;
-	if ($buffer) {
-		print $buffer;
+	if ( $buffer) {
+		print $buffer if !$args{no_footer};
 		return;
 	}
 
@@ -132,10 +132,10 @@ sub render {
 		$buffer = $self->render_one_row_per_column();
 	}
 	else {
-		$buffer = $self->render_table();
+		$buffer = $self->render_table(undef,%args);
 	}
 
-	if ($self->footer) {
+	if (!$args{no_footer} && $self->footer ) {
 		$buffer .= $self->footer;
 	}
 
@@ -177,9 +177,8 @@ Optionally pass in the table data to be used.
 =cut
 
 sub render_table {
-	my ($self, $data) = @_;
+	my ($self, $data, %args) = @_;
 	$data ||= $self->table_data;
-
 	my %table = (
 		alignment => [ map { $_->{is_num} ? 'right' : 'left' } @{ $data->{columns} } ],
 		columns   => [ map { $self->format_column_cell($_) } @{ $data->{columns} } ],
@@ -194,17 +193,21 @@ sub render_table {
 	}
 
 	my $t0 = gettimeofday;
-	my $output = $self->_render_table_data(\%table);
+	my $output = $self->_render_table_data(\%table, %args);
+#    warn "Table3".Dumper (\%table);
+
 	$self->timing->{render_table} = gettimeofday - $t0;
 	return $output;
 }
 
 sub _render_table_data {
-	my ($self, $data) = @_;
+	my ($self, $data, %args) = @_;
 	require Text::ASCIITable;
+ #   warn "rt".Dumper ($data,\%args);
 	my $table = Text::ASCIITable->new({ allowANSI => 1 });
+    $table->setOptions({   hide_HeadLine => $args{no_header},hide_HeadRow => $args{no_header} });
 
-	$table->setCols(@{ $data->{columns} });
+	$table->setCols(@{ $data->{columns} }) ;
 	foreach my $row (@{ $data->{rows} }) {
 		$table->addRow(@$row);
 	}

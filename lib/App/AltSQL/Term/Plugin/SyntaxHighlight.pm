@@ -64,6 +64,8 @@ after _build_term => sub {
 	$self->{term}->Attribs->{lines_preprocess_function} = sub {
 		my ($lines, $pos) = @_;
 		for my $i (0..$#{ $lines }) {
+#            warn "preprocess $i";
+
 			# Color the main color words (just for the fun)
 			foreach my $syntax_block (@input_highlighting) {
 				$lines->[$i] =~ s/($$syntax_block{regex})/colored($1, $syntax_block->{color})/eg;

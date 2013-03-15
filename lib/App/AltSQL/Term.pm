@@ -49,7 +49,7 @@ sub _build_term {
 	$self->{term} = $term;
 
 	# Require the tab key to be hit twice before showing the list of autocomplete items
-	$term->Attribs->{autolist} = 0;
+	$term->Attribs->{autolist} = 1;
 
 	$term->Attribs->{completion_function} = sub {
 		$self->completion_function(@_);
@@ -63,10 +63,10 @@ sub _build_term {
 		kill 20, $$; # send ourselves SIGTSTP
 	});
 
-	$term->bindkey('^D', sub {
-		print "\n";
-		$self->app->shutdown();
-	});
+	# $term->bindkey('^D', sub {
+	# 	print "\n";
+	# 	$self->app->shutdown();
+	# });
 
 	$term->bindkey('return', sub { $self->return_key });
 
@@ -80,7 +80,7 @@ sub return_key {
 
 	## The user has pressed the 'enter' key.  If the buffer ends in ';' or '\G', or if they've typed the bare word 'quit' or 'exit', accept the buffer
 	my $input = join ' ', @{ $self->term->{lines} };
-	if ($input =~ m{(;|\\G|\\c)\s*$} || $input =~ m{^\s*(quit|exit)\s*$} || $input =~ m{^\s*$}) {
+	if ($input =~ m{(;)\s*$} || $input =~ m{^\s*(quit|exit)\s*$} || $input =~ m{^\s*$}  || $input =~ m{^[\\\.]}) {
 		$self->term->accept_line();
 	}
 	else {

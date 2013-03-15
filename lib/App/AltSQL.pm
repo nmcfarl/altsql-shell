@@ -196,7 +196,7 @@ my @_config_stems = ( '/etc/altsql', "$ENV{HOME}/.altsql" );
 my %_default_classes = (
 	term => 'App::AltSQL::Term',
 	view => 'App::AltSQL::View',
-	model => 'App::AltSQL::Model::MySQL',
+	model => 'App::AltSQL::Model::Pg',
 );
 our %default_config = (
 	plugins => [ 'Tail', 'Dump' ],
@@ -476,7 +476,11 @@ sub run {
 
 	my $input;
 	while (defined ($input = $self->term->readline())) {
-		$self->handle_term_input($input);
+        my @commands = split /\;/, $input;
+        for my $command (@commands) {
+            $self->handle_term_input($command);    
+        }
+		
 	}
 }
 
@@ -522,8 +526,10 @@ sub handle_term_input {
 		$render_opts{one_row_per_column} = 1;
 	}
 
+
+
 	# Allow the user to pass non-SQL control verbs
-	if ($input =~ m/^\s*(quit|exit)\s*$/) {
+	if ($input =~ m/^\s*(quit|exit|\\q)\s*$/) {
 		return $self->shutdown();
 	}
 
@@ -536,10 +542,17 @@ sub handle_term_input {
 		return;
 	}
 
-	if (my ($command) = $input =~ m/^\.([a-z_]+)\b/i) {
+ 	if (my ($command) = $input =~ m/^\.([a-z_]+)\b/i) {
 		my $handled = $self->call_command(lc($command), $input);
 		return if $handled;
 	}
+
+	if (my ($command, $args) = $input =~ m/^\\([a-z_]+)\b(.*)/i) {
+		my $handled = $self->call_command(lc($command), $args);
+		return if $handled;
+	}
+
+
 
 	my $view = $self->model->handle_sql_input($input, \%render_opts);
 	return $view;

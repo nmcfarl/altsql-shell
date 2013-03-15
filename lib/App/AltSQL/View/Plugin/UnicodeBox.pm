@@ -28,7 +28,7 @@ my %default_config = (
 );
 
 sub _render_table_data {
-	my ($self, $data) = @_;
+	my ($self, $data, %args) = @_;
 
 	my $table = Text::UnicodeBox::Table->new(
 		split_lines => $self->resolve_namespace_config_value(__PACKAGE__, 'split_lines', \%default_config),
@@ -64,13 +64,13 @@ sub _render_table_data {
 
 	my $header_reminder_frequency = $self->resolve_namespace_config_value(__PACKAGE__, 'header_reminder', \%default_config);
 
-	$table->add_header({ alignment => $data->{alignment} }, @{ $data->{columns} });
+	$table->add_header({ alignment => $data->{alignment} }, @{ $data->{columns} })  if !$args{no_header};
 
 	my $row_count = 0;
 	my $last_header_at = 0;
 	foreach my $row (@{ $data->{rows} }) {
 		$table->add_row(@$row);
-		if ($header_reminder_frequency && (++$row_count - $last_header_at > $header_reminder_frequency)) {
+		if ( !$args{no_header}  && $header_reminder_frequency && (++$row_count - $last_header_at > $header_reminder_frequency)) {
 			$table->add_header(@{ $data->{columns} });
 			$last_header_at = $row_count;
 		}
