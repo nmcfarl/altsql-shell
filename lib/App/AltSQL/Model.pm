@@ -24,12 +24,13 @@ sub show_sql_error {
 sub execute_sql {
 	my ($self, $input, $recurse) = @_;
     
-    if ($recurse) {
-        warn "rerunning sql";
-    }
-	my $sth = $self->dbh->prepare($input);
-	$sth->execute();
-
+        if ($recurse) {
+          warn "rerunning sql";
+        }
+        eval{
+          my $sth = $self->dbh->prepare($input);
+          $sth->execute();
+        }; 
 	if (my $error = $self->dbh->errstr || $@) {
          if ($error eq 'no connection to the server'
              ||
