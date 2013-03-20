@@ -506,7 +506,14 @@ The user has just typed something and submitted the buffer.  Do something with i
 
 sub handle_term_input {
 	my ($self, $input) = @_;
-
+        
+        my %lookup = (
+            'd' => 'describe',
+            'd+' => 'describe_plus',
+            'dt' => 'describe',
+            'dt+' => 'describe_plus',                      
+        );
+        
 	# Next if Ctrl-C or if user typed nothing
 	if (! length $input) {
 		return;
@@ -541,6 +548,18 @@ sub handle_term_input {
 		}
 		return;
 	}
+ 	if ($input =~ m/^\\([a-z_+]+)\b/i  
+            && $lookup{$1}) {          
+
+            my $command =  $lookup{$1};            
+            $input =~ s/\\$1/.$command/;
+            warn $input;
+            my $handled = $self->call_command(lc($command), $input);
+            return if $handled;
+	}
+
+
+
 
  	if (my ($command) = $input =~ m/^\.([a-z_]+)\b/i) {
 		my $handled = $self->call_command(lc($command), $input);
