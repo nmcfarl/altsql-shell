@@ -23,12 +23,12 @@ sub show_sql_error {
 
 sub execute_sql {
 	my ($self, $input, $recurse) = @_;
-    
+        my $sth;
         if ($recurse) {
           warn "rerunning sql";
         }
         eval{
-          my $sth = $self->dbh->prepare($input);
+          $sth = $self->dbh->prepare($input);
           $sth->execute();
         }; 
 	if (my $error = $self->dbh->errstr || $@) {
@@ -36,14 +36,12 @@ sub execute_sql {
              ||
              $error =~ /terminating connection due to administrator command/
             ) {
-             warn "!!no connection";
-#             $self->log_error("!!".$error);
              eval {$self->db_connect();}; die $@ if $@;
              return $self->execute_sql($input, 1) if !$recurse;
-         }else {
-            $self->log_error($error);            
-        }
-		return;
+           }else {
+             $self->log_error($error);            
+           }
+         return;
 	}
 
 	return $sth;
